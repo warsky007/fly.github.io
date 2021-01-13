@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Posts | Warsky007</title>
-    <link>https://warsky007.github.io/post/</link>
-      <atom:link href="https://warsky007.github.io/post/index.xml" rel="self" type="application/rss+xml" />
-    <description>Posts</description>
+    <title>数据库 | Warsky007</title>
+    <link>https://warsky007.github.io/category/%E6%95%B0%E6%8D%AE%E5%BA%93/</link>
+      <atom:link href="https://warsky007.github.io/category/%E6%95%B0%E6%8D%AE%E5%BA%93/index.xml" rel="self" type="application/rss+xml" />
+    <description>数据库</description>
     <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Tue, 12 Jan 2021 00:00:00 +0000</lastBuildDate>
     <image>
       <url>https://warsky007.github.io/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
-      <title>Posts</title>
-      <link>https://warsky007.github.io/post/</link>
+      <title>数据库</title>
+      <link>https://warsky007.github.io/category/%E6%95%B0%E6%8D%AE%E5%BA%93/</link>
     </image>
     
     <item>
@@ -193,18 +193,6 @@ minmax文件里面存放的是该分区里分区字段的最小最大值。分�
 其它列的索引过程类似，这里就不一一赘述了，有兴趣的朋友可以自己去研究。&lt;/p&gt;
 &lt;h1 id=&#34;总结&#34;&gt;总结&lt;/h1&gt;
 &lt;p&gt;本文通过一个简单的例子来分析ClickHouse的存储结构，整个逻辑力求简洁明了，希望通过本文能够让喜欢ClickHouse的朋友对它的索引有个清晰的认识。&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>嗖...</title>
-      <link>https://warsky007.github.io/post/getting-started/</link>
-      <pubDate>Fri, 08 Jan 2021 00:00:00 +0000</pubDate>
-      <guid>https://warsky007.github.io/post/getting-started/</guid>
-      <description>&lt;p&gt;2020年已经过去，去年注定是个不平凡的一年，新冠病毒肆虐，很多人因为疫情而举步维艰，也有一些人甚至失去了生命。幸运的是我这个小家庭没有受到太大的影响，家人孩子一切平安。&lt;/p&gt;
-&lt;p&gt;平时工作很忙，周末还要回家带娃，我每天就这么忙碌着，浑浑噩噩的过着。突然有一天我感觉时间过的好快，似乎自己什么也没做一年就这样过去了，而人生又有多少个一年呢？我想我该放慢脚步，用心记录下生活中的美好瞬间，这样等哪一天闲的没事了，看着这些东西也许就不会觉得我在浪费青春了。&lt;/p&gt;
-&lt;p&gt;好记性不如烂笔头，希望在接下来的工作当中能够多抽出一些时间来记录工作中遇到的一些问题，解决方案，以及学到的一些知识。&lt;/p&gt;
-&lt;p&gt;好的东西就是要拿出来分享，愿与君共勉！！！&lt;/p&gt;
 </description>
     </item>
     

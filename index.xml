@@ -33,6 +33,190 @@
     </item>
     
     <item>
+      <title>ClickHouse存储结构及索引详解</title>
+      <link>https://warsky007.github.io/post/clickhouse-storage-index/</link>
+      <pubDate>Tue, 12 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://warsky007.github.io/post/clickhouse-storage-index/</guid>
+      <description>&lt;h1 id=&#34;环境介绍&#34;&gt;环境介绍&lt;/h1&gt;
+&lt;p&gt;本文基于ClickHouse 20.8.5.45版本编写，操作系统使用的是CentOS 7.5，主要介绍MergeTree表引擎的存储结构以及索引过程。&lt;/p&gt;
+&lt;h1 id=&#34;创建表&#34;&gt;创建表&lt;/h1&gt;
+&lt;h3 id=&#34;创建语句&#34;&gt;创建语句&lt;/h3&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;CREATE TABLE test_merge_tree
+(
+    `Id` UInt64,
+    `Birthday` Date,
+    `Name` String
+)
+ENGINE = MergeTree()
+PARTITION BY toYYYYMM(Birthday)
+ORDER BY (Id, Name)
+SETTINGS index_granularity = 2
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;语句介绍&#34;&gt;语句介绍&lt;/h3&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;ENGINE&lt;/strong&gt;，表引擎。ClickHouse支持很多种表引擎，本文主要讲解MergeTree，所以选用合并树。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;PARTITION BY&lt;/strong&gt;，分区键。用于指定数据以何种方式分区，合理使用分区可以有效减少查询时文件的扫描范围。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;ORDER BY&lt;/strong&gt;，排序键。用于指定数据以何种方式排序，默认情况下排序键和主键相同。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;SETTINGS&lt;/strong&gt;，配置。创建MergeTree Table时使用的配置，可选的配置有很多，这里只介绍index_granularity。index_granularity表示索引粒度，代表每隔多少行数据生成一条索引，默认值是8192。默认值需要的数据量很大，不方便本文展示数据文件，所以这里我把它调小了。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h1 id=&#34;文件结构&#34;&gt;文件结构&lt;/h1&gt;
+&lt;p&gt;刚刚创建的表只在数据目录下生成了一个名为&lt;strong&gt;test_merge_tree&lt;/strong&gt;文件夹(具体路径为data/default/test_merge_tree)，并没有任何数据，接下来往该表里面插入一条数据，看看会生成哪些文件。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;INSERT INTO test_merge_tree VALUES(1, &#39;2000-02-01&#39;, &#39;Fly li&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;在test_merge_tree目录下使用tree命令可以看到刚刚的那条命令生成了一个名为&lt;strong&gt;200002_1_1_0&lt;/strong&gt;的文件夹。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;├── 200002_1_1_0
+│   ├── Birthday.bin
+│   ├── Birthday.mrk2
+│   ├── checksums.txt
+│   ├── columns.txt
+│   ├── count.txt
+│   ├── Id.bin
+│   ├── Id.mrk2
+│   ├── minmax_Birthday.idx
+│   ├── Name.bin
+│   ├── Name.mrk2
+│   ├── partition.dat
+│   └── primary.idx
+├── detached
+└── format_version.txt
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;分区目录命名规则&#34;&gt;分区目录命名规则&lt;/h3&gt;
+&lt;p&gt;在介绍这些文件之前先介绍一下200002_1_1_0这个目录的命名规则&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;PartitionId_MinBlockNum_MaxBlockNum_Level
+&lt;/code&gt;&lt;/pre&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;PartitionId&lt;/strong&gt;，分区Id。其值是由创建表时所指定的分区键决定的，由于我们创建表时使用的分区键为toYYYYMM(Birthday)，即生日的年月，而插入的Birthday为2000-02-01，所以其值为200002。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;MinBlockNum、MaxBlockNum&lt;/strong&gt;，最小最大数据块编号。其值在单张表内从1开始累加，每当新创建一个分区目录其值就会加1，且新创建的分区目录MinBlockNum和MaxBlockNum相等，只有当分区目录发生合并时其值才会不等。由于这是该表第一次插入数据，所以MinBlockNum和MaxBlockNum都为1。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Level&lt;/strong&gt;，分区被合并的次数。level和MinBlockNum以及MaxBlockNum不同，它不是单张表内累加的，而是单张表中的单个分区内累加的。每当新创建一个分区目录其值均为0，只有当分区目录发生合并时其值才会大于0。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;当分区发生合并时，新的分区目录名称命名规则将会在接下来介绍，这里不做详述。&lt;/p&gt;
+&lt;h3 id=&#34;文件介绍&#34;&gt;文件介绍&lt;/h3&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;文件名&lt;/th&gt;
+&lt;th&gt;描述&lt;/th&gt;
+&lt;th&gt;作用&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;primary.idx&lt;/td&gt;
+&lt;td&gt;索引文件&lt;/td&gt;
+&lt;td&gt;用于存放稀疏索引&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;[Column].mrk2&lt;/td&gt;
+&lt;td&gt;标记文件&lt;/td&gt;
+&lt;td&gt;保存了bin文件中数据的偏移信息，用于建立primary.idx和[Column].bin文件之间的映射&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;[Column].bin&lt;/td&gt;
+&lt;td&gt;数据文件&lt;/td&gt;
+&lt;td&gt;存储数据，默认使用lz4压缩存储&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;partition.dat&lt;/td&gt;
+&lt;td&gt;分区文件&lt;/td&gt;
+&lt;td&gt;用于保存分区表达式生成的值&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;minmax_[Column].idx&lt;/td&gt;
+&lt;td&gt;minmax索引&lt;/td&gt;
+&lt;td&gt;用于记录当前分区下分区字段的最小最大值&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;columns.txt&lt;/td&gt;
+&lt;td&gt;列信息文件&lt;/td&gt;
+&lt;td&gt;用于保存表的列字段信息&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;count.txt&lt;/td&gt;
+&lt;td&gt;计数文件&lt;/td&gt;
+&lt;td&gt;用于记录当前分区目录下数据的总行数&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;checksums.txt&lt;/td&gt;
+&lt;td&gt;校验文件&lt;/td&gt;
+&lt;td&gt;存放以上各个文件的size以及哈希值，用于快速校验文件的完整性&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;h1 id=&#34;存储结构&#34;&gt;存储结构&lt;/h1&gt;
+&lt;h3 id=&#34;修改min_compress_block_size&#34;&gt;修改min_compress_block_size&lt;/h3&gt;
+&lt;p&gt;在介绍这部分之前，需要先将min_compress_block_size配置改小，以方便分析mrk2和bin文件，其默认值为65535。&lt;/p&gt;
+&lt;p&gt;修改方法为在&lt;strong&gt;users.xml&lt;/strong&gt;文件的&lt;strong&gt;profiles&lt;/strong&gt;里面增加以下配置&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;min_compress_block_size&amp;gt;24&amp;lt;/min_compress_block_size&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;修改完后重启clickhouse-server服务，然后再用以下命令查看是否修改成功&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;SELECT 
+    name,
+    value,
+    changed,
+    type
+FROM system.settings
+WHERE name = &#39;min_compress_block_size&#39;
+
+┌─name────────────────────┬─value─┬─changed─┬─type───┐
+│ min_compress_block_size │ 24    │       1 │ UInt64 │
+└─────────────────────────┴───────┴─────────┴────────┘
+&lt;/code&gt;&lt;/pre&gt;
+&lt;h3 id=&#34;插入数据&#34;&gt;插入数据&lt;/h3&gt;
+&lt;p&gt;刚刚已经插入了一条数据，但是那一条数据不具有代表性，所以这次决定多插入几条数据再来分析。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-sql&#34;&gt;INSERT INTO test_merge_tree VALUES(3, &#39;2000-02-03&#39;, &#39;Lisa&#39;),(4, &#39;2000-02-03&#39;, &#39;Lilei&#39;),(6, &#39;2000-02-08&#39;, &#39;Meimei&#39;),(12, &#39;2000-02-03&#39;, &#39;paker&#39;),(31, &#39;2000-02-07&#39;, &#39;vincent&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;上面这条命令产生了个新的分区目录&lt;strong&gt;200002_2_2_0&lt;/strong&gt;，此目录下的文件前面已经讲过，现在重点分析以下几个文件的存储格式&lt;/p&gt;
+&lt;h4 id=&#34;primaryidx&#34;&gt;primary.idx&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;primary.png&#34; alt=&#34;primary&#34;&gt;
+MergeTree表会按照主键字段生成primary.idx，用于加快表查询。前面创建表时使用的是(Id, Name)两个字段作为主键，所以每隔index_granularity行数据就会取(Id, Name)的值作为索引值，由于index_granularity被设置为2，所以每隔两行数据就会生成一个索引。也就是说会使用(3,&amp;lsquo;Lisa&amp;rsquo;), (6,&amp;lsquo;Meimei&amp;rsquo;), (31,&amp;lsquo;vincent&amp;rsquo;)作为索引值。&lt;/p&gt;
+&lt;p&gt;这里我只介绍第一个索引(3,&amp;lsquo;Lisa&amp;rsquo;)的存储格式，剩下的可以自己去梳理。Id是UInt64类型的，所以使用8字节来存储。从上图可以看出前8个字节为0x03，以小端模式来存储，接下来我们可以看到其它文件都是以小端模式来存储。Name是String类型，属于变长字段，所以会先使用1个字节来描述String的长度，由于Lisa的长度是4，所以第9个字节为0x04，再接下来就是Lisa的ASCII码。&lt;/p&gt;
+&lt;h4 id=&#34;idmrk2&#34;&gt;Id.mrk2&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;mrk2.png&#34; alt=&#34;mrk2&#34;&gt;
+mrk2文件格式比较固定，primary.idx文件中的每个索引在此文件中都有一个对应的Mark，Mark的格式如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;mark.png&#34; alt=&#34;mark&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Offset in compressed file，8 Bytes，代表该标记指向的压缩数据块在bin文件中的偏移量。&lt;/li&gt;
+&lt;li&gt;Offset in decompressed block，8 Bytes，代表该标记指向的数据在解压数据块中的偏移量。&lt;/li&gt;
+&lt;li&gt;Rows count，8 Bytes，行数，通常情况下其等于index_granularity。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;通过primary.idx中的索引寻找mrk2文件中对应的Mark非常简单，如果要寻找第n(从0开始)个index，则对应的Mark在mrk2文件中的偏移为n*24，从这个偏移处开始读取24 Bytes即可得到相应的Mark。&lt;/p&gt;
+&lt;h4 id=&#34;idbin&#34;&gt;Id.bin&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;bin.png&#34; alt=&#34;bin&#34;&gt;
+bin文件由若干个Block组成，由上图可知Id.bin文件中包含两个Block。每个Block主要由头部的Checksum以及若干个Granule组成，Block的格式如下图所示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;block.png&#34; alt=&#34;block&#34;&gt;&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;strong&gt;Checksum&lt;/strong&gt;，16 Bytes，用于对后面的数据进行校验。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Compression algorithm&lt;/strong&gt;，1 Byte，默认是LZ4，编号为0x82。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Compressed size&lt;/strong&gt;，4 Bytes，其值等于Compression algorithm + Compressed size + Decompressed size + Compressed data的长度&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Decompressed size&lt;/strong&gt;，4 Bytes，数据解压缩后的长度。&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Compressed data&lt;/strong&gt;，压缩数据，长度为Compressed size - 9。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;每个Block都会包含若干个Granule，具体有多少个Granule是由参数min_compress_block_size控制，每次Block中写完一个Granule的数据时，它会检查当前Block Size是否大于等于min_compress_block_size，如果满足则会把当前Block进行压缩然后写到磁盘中，不满足会继续等待下一个Granule。结合上面的INSERT语句，当插入第一个Granule(3, 4)时，数据的的size为16，由于16 &amp;lt; 24所以会等第二个Granule，当插入第二个Granule(6, 12)后数据的size为32，由于32 &amp;gt; 24所以会把(3, 4, 6, 12)压缩放到第一个Block里面。最后面的那个31由于是最后一条数据，就放到第二个Block里面。&lt;/p&gt;
+&lt;h4 id=&#34;partitiondat&#34;&gt;partition.dat&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;partition.png&#34; alt=&#34;partition&#34;&gt;
+partition.dat文件里面存放的是分区表达式的值，该分区表达式生成的值为200002，UInt32类型，转换成16进制就是0x00030d42。&lt;/p&gt;
+&lt;h4 id=&#34;minmax_birthdayidx&#34;&gt;minmax_Birthday.idx&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;minmax.png&#34; alt=&#34;minmax&#34;&gt;
+minmax文件里面存放的是该分区里分区字段的最小最大值。分区字段Birthday的类型为Date，其底层由UInt16实现，存的是从1970年1月1号到现在所经过的天数。通过上面的INSERT语句我们可以知道Birthday的最小值为2000-02-03，最大值为2000-02-08。这两个时间转换成天数分别为10990和10995，再转换成16进制就是0x2aee和0x2af3。&lt;/p&gt;
+&lt;h1 id=&#34;分区合并&#34;&gt;分区合并&lt;/h1&gt;
+&lt;p&gt;属于同一个分区的不同目录，ClickHouse会在分区目录创建后的一段时间自动进行合并，合并之后会生成一个全新的目录，以前老的分区目录不会立马删除，而是在合并后过一段时间再删除。新的分区目录名称遵循以下规则：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;PartitionId，分区Id不变。&lt;/li&gt;
+&lt;li&gt;MinBlockNum，取该分区中最小的MinBlockNum。&lt;/li&gt;
+&lt;li&gt;MaxBlockNum，取该分区中最大的MaxBlockNum。&lt;/li&gt;
+&lt;li&gt;Level，取该分区中最大的Level值加1。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;所以上面的两个分区目录200002_1_1_0和200002_2_2_0在过一段时间后最终会变成一个新的分区目录200002_1_2_1。由此可见如果你频繁插入数据会产生很多分区目录，在合并的时候会占用很多资源。所以最好一次插入很多条数据，尽量降低插入的频率。&lt;/p&gt;
+&lt;h1 id=&#34;索引过程&#34;&gt;索引过程&lt;/h1&gt;
+&lt;p&gt;通过上面的介绍相信大家已经对ClickHouse的索引结构有所了解，接下来用一张图简要描述Id字段的索引过程。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;indexing.png&#34; alt=&#34;indexing&#34;&gt;
+其它列的索引过程类似，这里就不一一赘述了，有兴趣的朋友可以自己去研究。&lt;/p&gt;
+&lt;h1 id=&#34;总结&#34;&gt;总结&lt;/h1&gt;
+&lt;p&gt;本文通过一个简单的例子来分析ClickHouse的存储结构，整个逻辑力求简洁明了，希望通过本文能够让喜欢ClickHouse的朋友对它的索引有个清晰的认识。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>嗖...</title>
       <link>https://warsky007.github.io/post/getting-started/</link>
       <pubDate>Fri, 08 Jan 2021 00:00:00 +0000</pubDate>

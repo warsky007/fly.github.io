@@ -34,10 +34,10 @@
   
     
   
-  <meta name="description" content="门户的第一篇博客">
+  <meta name="description" content="ClickHouse存储结构及索引详解">
 
   
-  <link rel="alternate" hreflang="en-us" href="https://warsky007.github.io/post/getting-started/">
+  <link rel="alternate" hreflang="en-us" href="https://warsky007.github.io/post/clickhouse-storage-index/">
 
   
 
@@ -265,7 +265,7 @@
   <link rel="icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_32x32_fill_lanczos_center_2.png">
   <link rel="apple-touch-icon" type="image/png" href="/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png">
 
-  <link rel="canonical" href="https://warsky007.github.io/post/getting-started/">
+  <link rel="canonical" href="https://warsky007.github.io/post/clickhouse-storage-index/">
 
   
   
@@ -280,15 +280,15 @@
   <meta property="twitter:card" content="summary_large_image">
   
   <meta property="og:site_name" content="Warsky007">
-  <meta property="og:url" content="https://warsky007.github.io/post/getting-started/">
-  <meta property="og:title" content="嗖... | Warsky007">
-  <meta property="og:description" content="门户的第一篇博客"><meta property="og:image" content="https://warsky007.github.io/post/getting-started/featured.jpg">
-  <meta property="twitter:image" content="https://warsky007.github.io/post/getting-started/featured.jpg"><meta property="og:locale" content="en-us">
+  <meta property="og:url" content="https://warsky007.github.io/post/clickhouse-storage-index/">
+  <meta property="og:title" content="ClickHouse存储结构及索引详解 | Warsky007">
+  <meta property="og:description" content="ClickHouse存储结构及索引详解"><meta property="og:image" content="https://warsky007.github.io/post/clickhouse-storage-index/featured.png">
+  <meta property="twitter:image" content="https://warsky007.github.io/post/clickhouse-storage-index/featured.png"><meta property="og:locale" content="en-us">
   
     
-      <meta property="article:published_time" content="2021-01-08T00:00:00&#43;00:00">
+      <meta property="article:published_time" content="2021-01-12T00:00:00&#43;00:00">
     
-    <meta property="article:modified_time" content="2021-01-08T00:00:00&#43;00:00">
+    <meta property="article:modified_time" content="2021-01-12T00:00:00&#43;00:00">
   
 
   
@@ -312,16 +312,16 @@
   "@type": "BlogPosting",
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://warsky007.github.io/post/getting-started/"
+    "@id": "https://warsky007.github.io/post/clickhouse-storage-index/"
   },
-  "headline": "嗖...",
+  "headline": "ClickHouse存储结构及索引详解",
   
   "image": [
-    "https://warsky007.github.io/post/getting-started/featured.jpg"
+    "https://warsky007.github.io/post/clickhouse-storage-index/featured.png"
   ],
   
-  "datePublished": "2021-01-08T00:00:00Z",
-  "dateModified": "2021-01-08T00:00:00Z",
+  "datePublished": "2021-01-12T00:00:00Z",
+  "dateModified": "2021-01-12T00:00:00Z",
   
   "author": {
     "@type": "Person",
@@ -336,7 +336,7 @@
       "url": "https://warsky007.github.io/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_192x192_fill_lanczos_center_2.png"
     }
   },
-  "description": "门户的第一篇博客"
+  "description": "ClickHouse存储结构及索引详解"
 }
 </script>
 
@@ -354,7 +354,7 @@
 
 
 
-  <title>嗖... | Warsky007</title>
+  <title>ClickHouse存储结构及索引详解 | Warsky007</title>
 
 </head>
 
@@ -640,13 +640,15 @@
 
   
   
+    
+  
 
 
 <div class="article-container pt-3">
-  <h1>嗖...</h1>
+  <h1>ClickHouse存储结构及索引详解</h1>
 
   
-  <p class="page-subtitle">门户的第一篇博客</p>
+  <p class="page-subtitle">ClickHouse存储结构及索引详解</p>
   
 
   
@@ -673,7 +675,7 @@
     
       
     
-    Jan 8, 2021
+    Jan 12, 2021
   </span>
   
 
@@ -682,7 +684,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-reading-time">
-    1 min read
+    8 min read
   </span>
   
 
@@ -696,7 +698,7 @@
   
   <span class="middot-divider"></span>
   <span class="article-categories">
-    <i class="fas fa-folder mr-1"></i><a href="/category/%E9%9A%8F%E7%AC%94/">随笔</a></span>
+    <i class="fas fa-folder mr-1"></i><a href="/category/%E6%95%B0%E6%8D%AE%E5%BA%93/">数据库</a></span>
   
 
 </div>
@@ -719,10 +721,10 @@
 </div>
 
 
-<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 640px; max-height: 427px;">
+<div class="article-header container featured-image-wrapper mt-4 mb-4" style="max-width: 1200px; max-height: 600px;">
   <div style="position: relative">
-    <img src="/post/getting-started/featured.jpg" alt="" class="featured-image">
-    <span class="article-header-caption">Image credit: <a href="https://unsplash.com/photos/-p-KCm6xB9I"><strong>Unsplash</strong></a></span>
+    <img src="/post/clickhouse-storage-index/featured_huafb26e05e5fe1dbb7ab906a60206fe64_49099_1200x0_resize_lanczos_2.png" alt="" class="featured-image">
+    
   </div>
 </div>
 
@@ -731,10 +733,182 @@
   <div class="article-container">
 
     <div class="article-style">
-      <p>2020年已经过去，去年注定是个不平凡的一年，新冠病毒肆虐，很多人因为疫情而举步维艰，也有一些人甚至失去了生命。幸运的是我这个小家庭没有受到太大的影响，家人孩子一切平安。</p>
-<p>平时工作很忙，周末还要回家带娃，我每天就这么忙碌着，浑浑噩噩的过着。突然有一天我感觉时间过的好快，似乎自己什么也没做一年就这样过去了，而人生又有多少个一年呢？我想我该放慢脚步，用心记录下生活中的美好瞬间，这样等哪一天闲的没事了，看着这些东西也许就不会觉得我在浪费青春了。</p>
-<p>好记性不如烂笔头，希望在接下来的工作当中能够多抽出一些时间来记录工作中遇到的一些问题，解决方案，以及学到的一些知识。</p>
-<p>好的东西就是要拿出来分享，愿与君共勉！！！</p>
+      <h1 id="环境介绍">环境介绍</h1>
+<p>本文基于ClickHouse 20.8.5.45版本编写，操作系统使用的是CentOS 7.5，主要介绍MergeTree表引擎的存储结构以及索引过程。</p>
+<h1 id="创建表">创建表</h1>
+<h3 id="创建语句">创建语句</h3>
+<pre><code class="language-sql">CREATE TABLE test_merge_tree
+(
+    `Id` UInt64,
+    `Birthday` Date,
+    `Name` String
+)
+ENGINE = MergeTree()
+PARTITION BY toYYYYMM(Birthday)
+ORDER BY (Id, Name)
+SETTINGS index_granularity = 2
+</code></pre>
+<h3 id="语句介绍">语句介绍</h3>
+<ol>
+<li><strong>ENGINE</strong>，表引擎。ClickHouse支持很多种表引擎，本文主要讲解MergeTree，所以选用合并树。</li>
+<li><strong>PARTITION BY</strong>，分区键。用于指定数据以何种方式分区，合理使用分区可以有效减少查询时文件的扫描范围。</li>
+<li><strong>ORDER BY</strong>，排序键。用于指定数据以何种方式排序，默认情况下排序键和主键相同。</li>
+<li><strong>SETTINGS</strong>，配置。创建MergeTree Table时使用的配置，可选的配置有很多，这里只介绍index_granularity。index_granularity表示索引粒度，代表每隔多少行数据生成一条索引，默认值是8192。默认值需要的数据量很大，不方便本文展示数据文件，所以这里我把它调小了。</li>
+</ol>
+<h1 id="文件结构">文件结构</h1>
+<p>刚刚创建的表只在数据目录下生成了一个名为<strong>test_merge_tree</strong>文件夹(具体路径为data/default/test_merge_tree)，并没有任何数据，接下来往该表里面插入一条数据，看看会生成哪些文件。</p>
+<pre><code class="language-sql">INSERT INTO test_merge_tree VALUES(1, '2000-02-01', 'Fly li')
+</code></pre>
+<p>在test_merge_tree目录下使用tree命令可以看到刚刚的那条命令生成了一个名为<strong>200002_1_1_0</strong>的文件夹。</p>
+<pre><code class="language-shell">├── 200002_1_1_0
+│   ├── Birthday.bin
+│   ├── Birthday.mrk2
+│   ├── checksums.txt
+│   ├── columns.txt
+│   ├── count.txt
+│   ├── Id.bin
+│   ├── Id.mrk2
+│   ├── minmax_Birthday.idx
+│   ├── Name.bin
+│   ├── Name.mrk2
+│   ├── partition.dat
+│   └── primary.idx
+├── detached
+└── format_version.txt
+</code></pre>
+<h3 id="分区目录命名规则">分区目录命名规则</h3>
+<p>在介绍这些文件之前先介绍一下200002_1_1_0这个目录的命名规则</p>
+<pre><code>PartitionId_MinBlockNum_MaxBlockNum_Level
+</code></pre>
+<ol>
+<li><strong>PartitionId</strong>，分区Id。其值是由创建表时所指定的分区键决定的，由于我们创建表时使用的分区键为toYYYYMM(Birthday)，即生日的年月，而插入的Birthday为2000-02-01，所以其值为200002。</li>
+<li><strong>MinBlockNum、MaxBlockNum</strong>，最小最大数据块编号。其值在单张表内从1开始累加，每当新创建一个分区目录其值就会加1，且新创建的分区目录MinBlockNum和MaxBlockNum相等，只有当分区目录发生合并时其值才会不等。由于这是该表第一次插入数据，所以MinBlockNum和MaxBlockNum都为1。</li>
+<li><strong>Level</strong>，分区被合并的次数。level和MinBlockNum以及MaxBlockNum不同，它不是单张表内累加的，而是单张表中的单个分区内累加的。每当新创建一个分区目录其值均为0，只有当分区目录发生合并时其值才会大于0。</li>
+</ol>
+<p>当分区发生合并时，新的分区目录名称命名规则将会在接下来介绍，这里不做详述。</p>
+<h3 id="文件介绍">文件介绍</h3>
+<table>
+<thead>
+<tr>
+<th>文件名</th>
+<th>描述</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>primary.idx</td>
+<td>索引文件</td>
+<td>用于存放稀疏索引</td>
+</tr>
+<tr>
+<td>[Column].mrk2</td>
+<td>标记文件</td>
+<td>保存了bin文件中数据的偏移信息，用于建立primary.idx和[Column].bin文件之间的映射</td>
+</tr>
+<tr>
+<td>[Column].bin</td>
+<td>数据文件</td>
+<td>存储数据，默认使用lz4压缩存储</td>
+</tr>
+<tr>
+<td>partition.dat</td>
+<td>分区文件</td>
+<td>用于保存分区表达式生成的值</td>
+</tr>
+<tr>
+<td>minmax_[Column].idx</td>
+<td>minmax索引</td>
+<td>用于记录当前分区下分区字段的最小最大值</td>
+</tr>
+<tr>
+<td>columns.txt</td>
+<td>列信息文件</td>
+<td>用于保存表的列字段信息</td>
+</tr>
+<tr>
+<td>count.txt</td>
+<td>计数文件</td>
+<td>用于记录当前分区目录下数据的总行数</td>
+</tr>
+<tr>
+<td>checksums.txt</td>
+<td>校验文件</td>
+<td>存放以上各个文件的size以及哈希值，用于快速校验文件的完整性</td>
+</tr>
+</tbody>
+</table>
+<h1 id="存储结构">存储结构</h1>
+<h3 id="修改min_compress_block_size">修改min_compress_block_size</h3>
+<p>在介绍这部分之前，需要先将min_compress_block_size配置改小，以方便分析mrk2和bin文件，其默认值为65535。</p>
+<p>修改方法为在<strong>users.xml</strong>文件的<strong>profiles</strong>里面增加以下配置</p>
+<pre><code class="language-xml">&lt;min_compress_block_size&gt;24&lt;/min_compress_block_size&gt;
+</code></pre>
+<p>修改完后重启clickhouse-server服务，然后再用以下命令查看是否修改成功</p>
+<pre><code class="language-sql">SELECT 
+    name,
+    value,
+    changed,
+    type
+FROM system.settings
+WHERE name = 'min_compress_block_size'
+
+┌─name────────────────────┬─value─┬─changed─┬─type───┐
+│ min_compress_block_size │ 24    │       1 │ UInt64 │
+└─────────────────────────┴───────┴─────────┴────────┘
+</code></pre>
+<h3 id="插入数据">插入数据</h3>
+<p>刚刚已经插入了一条数据，但是那一条数据不具有代表性，所以这次决定多插入几条数据再来分析。</p>
+<pre><code class="language-sql">INSERT INTO test_merge_tree VALUES(3, '2000-02-03', 'Lisa'),(4, '2000-02-03', 'Lilei'),(6, '2000-02-08', 'Meimei'),(12, '2000-02-03', 'paker'),(31, '2000-02-07', 'vincent')
+</code></pre>
+<p>上面这条命令产生了个新的分区目录<strong>200002_2_2_0</strong>，此目录下的文件前面已经讲过，现在重点分析以下几个文件的存储格式</p>
+<h4 id="primaryidx">primary.idx</h4>
+<p><img src="primary.png" alt="primary">
+MergeTree表会按照主键字段生成primary.idx，用于加快表查询。前面创建表时使用的是(Id, Name)两个字段作为主键，所以每隔index_granularity行数据就会取(Id, Name)的值作为索引值，由于index_granularity被设置为2，所以每隔两行数据就会生成一个索引。也就是说会使用(3,&lsquo;Lisa&rsquo;), (6,&lsquo;Meimei&rsquo;), (31,&lsquo;vincent&rsquo;)作为索引值。</p>
+<p>这里我只介绍第一个索引(3,&lsquo;Lisa&rsquo;)的存储格式，剩下的可以自己去梳理。Id是UInt64类型的，所以使用8字节来存储。从上图可以看出前8个字节为0x03，以小端模式来存储，接下来我们可以看到其它文件都是以小端模式来存储。Name是String类型，属于变长字段，所以会先使用1个字节来描述String的长度，由于Lisa的长度是4，所以第9个字节为0x04，再接下来就是Lisa的ASCII码。</p>
+<h4 id="idmrk2">Id.mrk2</h4>
+<p><img src="mrk2.png" alt="mrk2">
+mrk2文件格式比较固定，primary.idx文件中的每个索引在此文件中都有一个对应的Mark，Mark的格式如下图所示：</p>
+<p><img src="mark.png" alt="mark"></p>
+<ol>
+<li>Offset in compressed file，8 Bytes，代表该标记指向的压缩数据块在bin文件中的偏移量。</li>
+<li>Offset in decompressed block，8 Bytes，代表该标记指向的数据在解压数据块中的偏移量。</li>
+<li>Rows count，8 Bytes，行数，通常情况下其等于index_granularity。</li>
+</ol>
+<p>通过primary.idx中的索引寻找mrk2文件中对应的Mark非常简单，如果要寻找第n(从0开始)个index，则对应的Mark在mrk2文件中的偏移为n*24，从这个偏移处开始读取24 Bytes即可得到相应的Mark。</p>
+<h4 id="idbin">Id.bin</h4>
+<p><img src="bin.png" alt="bin">
+bin文件由若干个Block组成，由上图可知Id.bin文件中包含两个Block。每个Block主要由头部的Checksum以及若干个Granule组成，Block的格式如下图所示：</p>
+<p><img src="block.png" alt="block"></p>
+<ol>
+<li><strong>Checksum</strong>，16 Bytes，用于对后面的数据进行校验。</li>
+<li><strong>Compression algorithm</strong>，1 Byte，默认是LZ4，编号为0x82。</li>
+<li><strong>Compressed size</strong>，4 Bytes，其值等于Compression algorithm + Compressed size + Decompressed size + Compressed data的长度</li>
+<li><strong>Decompressed size</strong>，4 Bytes，数据解压缩后的长度。</li>
+<li><strong>Compressed data</strong>，压缩数据，长度为Compressed size - 9。</li>
+</ol>
+<p>每个Block都会包含若干个Granule，具体有多少个Granule是由参数min_compress_block_size控制，每次Block中写完一个Granule的数据时，它会检查当前Block Size是否大于等于min_compress_block_size，如果满足则会把当前Block进行压缩然后写到磁盘中，不满足会继续等待下一个Granule。结合上面的INSERT语句，当插入第一个Granule(3, 4)时，数据的的size为16，由于16 &lt; 24所以会等第二个Granule，当插入第二个Granule(6, 12)后数据的size为32，由于32 &gt; 24所以会把(3, 4, 6, 12)压缩放到第一个Block里面。最后面的那个31由于是最后一条数据，就放到第二个Block里面。</p>
+<h4 id="partitiondat">partition.dat</h4>
+<p><img src="partition.png" alt="partition">
+partition.dat文件里面存放的是分区表达式的值，该分区表达式生成的值为200002，UInt32类型，转换成16进制就是0x00030d42。</p>
+<h4 id="minmax_birthdayidx">minmax_Birthday.idx</h4>
+<p><img src="minmax.png" alt="minmax">
+minmax文件里面存放的是该分区里分区字段的最小最大值。分区字段Birthday的类型为Date，其底层由UInt16实现，存的是从1970年1月1号到现在所经过的天数。通过上面的INSERT语句我们可以知道Birthday的最小值为2000-02-03，最大值为2000-02-08。这两个时间转换成天数分别为10990和10995，再转换成16进制就是0x2aee和0x2af3。</p>
+<h1 id="分区合并">分区合并</h1>
+<p>属于同一个分区的不同目录，ClickHouse会在分区目录创建后的一段时间自动进行合并，合并之后会生成一个全新的目录，以前老的分区目录不会立马删除，而是在合并后过一段时间再删除。新的分区目录名称遵循以下规则：</p>
+<ol>
+<li>PartitionId，分区Id不变。</li>
+<li>MinBlockNum，取该分区中最小的MinBlockNum。</li>
+<li>MaxBlockNum，取该分区中最大的MaxBlockNum。</li>
+<li>Level，取该分区中最大的Level值加1。</li>
+</ol>
+<p>所以上面的两个分区目录200002_1_1_0和200002_2_2_0在过一段时间后最终会变成一个新的分区目录200002_1_2_1。由此可见如果你频繁插入数据会产生很多分区目录，在合并的时候会占用很多资源。所以最好一次插入很多条数据，尽量降低插入的频率。</p>
+<h1 id="索引过程">索引过程</h1>
+<p>通过上面的介绍相信大家已经对ClickHouse的索引结构有所了解，接下来用一张图简要描述Id字段的索引过程。</p>
+<p><img src="indexing.png" alt="indexing">
+其它列的索引过程类似，这里就不一一赘述了，有兴趣的朋友可以自己去研究。</p>
+<h1 id="总结">总结</h1>
+<p>本文通过一个简单的例子来分析ClickHouse的存储结构，整个逻辑力求简洁明了，希望通过本文能够让喜欢ClickHouse的朋友对它的索引有个清晰的认识。</p>
 
     </div>
 
@@ -747,7 +921,7 @@
 
 <div class="article-tags">
   
-  <a class="badge badge-light" href="/tag/%E7%94%9F%E6%B4%BB/">生活</a>
+  <a class="badge badge-light" href="/tag/clickhouse/">ClickHouse</a>
   
 </div>
 
@@ -764,7 +938,7 @@
       
       
       <li>
-        <a href="https://twitter.com/intent/tweet?url=https://warsky007.github.io/post/getting-started/&amp;text=%e5%97%96..." target="_blank" rel="noopener" class="share-btn-twitter">
+        <a href="https://twitter.com/intent/tweet?url=https://warsky007.github.io/post/clickhouse-storage-index/&amp;text=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3" target="_blank" rel="noopener" class="share-btn-twitter">
           <i class="fab fa-twitter"></i>
         </a>
       </li>
@@ -777,7 +951,7 @@
       
       
       <li>
-        <a href="https://www.facebook.com/sharer.php?u=https://warsky007.github.io/post/getting-started/&amp;t=%e5%97%96..." target="_blank" rel="noopener" class="share-btn-facebook">
+        <a href="https://www.facebook.com/sharer.php?u=https://warsky007.github.io/post/clickhouse-storage-index/&amp;t=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3" target="_blank" rel="noopener" class="share-btn-facebook">
           <i class="fab fa-facebook"></i>
         </a>
       </li>
@@ -790,7 +964,7 @@
       
       
       <li>
-        <a href="mailto:?subject=%e5%97%96...&amp;body=https://warsky007.github.io/post/getting-started/" target="_blank" rel="noopener" class="share-btn-email">
+        <a href="mailto:?subject=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3&amp;body=https://warsky007.github.io/post/clickhouse-storage-index/" target="_blank" rel="noopener" class="share-btn-email">
           <i class="fas fa-envelope"></i>
         </a>
       </li>
@@ -803,7 +977,7 @@
       
       
       <li>
-        <a href="https://www.linkedin.com/shareArticle?url=https://warsky007.github.io/post/getting-started/&amp;title=%e5%97%96..." target="_blank" rel="noopener" class="share-btn-linkedin">
+        <a href="https://www.linkedin.com/shareArticle?url=https://warsky007.github.io/post/clickhouse-storage-index/&amp;title=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3" target="_blank" rel="noopener" class="share-btn-linkedin">
           <i class="fab fa-linkedin-in"></i>
         </a>
       </li>
@@ -816,7 +990,7 @@
       
       
       <li>
-        <a href="whatsapp://send?text=%e5%97%96...%20https://warsky007.github.io/post/getting-started/" target="_blank" rel="noopener" class="share-btn-whatsapp">
+        <a href="whatsapp://send?text=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3%20https://warsky007.github.io/post/clickhouse-storage-index/" target="_blank" rel="noopener" class="share-btn-whatsapp">
           <i class="fab fa-whatsapp"></i>
         </a>
       </li>
@@ -829,7 +1003,7 @@
       
       
       <li>
-        <a href="https://service.weibo.com/share/share.php?url=https://warsky007.github.io/post/getting-started/&amp;title=%e5%97%96..." target="_blank" rel="noopener" class="share-btn-weibo">
+        <a href="https://service.weibo.com/share/share.php?url=https://warsky007.github.io/post/clickhouse-storage-index/&amp;title=ClickHouse%e5%ad%98%e5%82%a8%e7%bb%93%e6%9e%84%e5%8f%8a%e7%b4%a2%e5%bc%95%e8%af%a6%e8%a7%a3" target="_blank" rel="noopener" class="share-btn-weibo">
           <i class="fab fa-weibo"></i>
         </a>
       </li>
