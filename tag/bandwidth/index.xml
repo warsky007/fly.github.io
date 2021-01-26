@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>bandwidth | Warsky007</title>
+    <link>https://warsky007.github.io/tag/bandwidth/</link>
+      <atom:link href="https://warsky007.github.io/tag/bandwidth/index.xml" rel="self" type="application/rss+xml" />
+    <description>bandwidth</description>
+    <generator>Wowchemy (https://wowchemy.com)</generator><language>en-us</language><lastBuildDate>Tue, 26 Jan 2021 00:00:00 +0000</lastBuildDate>
+    <image>
+      <url>https://warsky007.github.io/images/icon_hu0b7a4cb9992c9ac0e91bd28ffd38dd00_9727_512x512_fill_lanczos_center_2.png</url>
+      <title>bandwidth</title>
+      <link>https://warsky007.github.io/tag/bandwidth/</link>
+    </image>
+    
+    <item>
+      <title>golang带宽限制</title>
+      <link>https://warsky007.github.io/post/bandwidth-limiter/</link>
+      <pubDate>Tue, 26 Jan 2021 00:00:00 +0000</pubDate>
+      <guid>https://warsky007.github.io/post/bandwidth-limiter/</guid>
+      <description>&lt;h1 id=&#34;介绍&#34;&gt;介绍&lt;/h1&gt;
+&lt;p&gt;很多客户使用多中心部署的时候副中心和主中心之间都是走专线的，专线的带宽是有限的，很多服务共享此带宽。为了防止一个服务把带宽占尽而导致其它服务无法工作，这就要求服务有带宽限制的功能。本文基于golang的time/rate模块实现了一个线程安全的带宽限制器，该带宽限制器本质上还是基于Token Bucket(令牌桶)实现的。下面提供源码以供大家参考。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;import (
+	&amp;quot;context&amp;quot;
+	&amp;quot;fmt&amp;quot;
+	&amp;quot;golang.org/x/time/rate&amp;quot;
+	&amp;quot;sync/atomic&amp;quot;
+	&amp;quot;unsafe&amp;quot;
+)
+
+type BandwidthLimiter struct {
+	limiter   *rate.Limiter
+	ctx       context.Context
+	cancel    context.CancelFunc
+	bandwidth int
+}
+
+func NewBandwidthLimiter(bandwidth int) (*BandwidthLimiter, error) {
+	if bandwidth &amp;lt; 0 {
+		return nil, fmt.Errorf(&amp;quot;invalid argument bandwidth %d&amp;quot;, bandwidth)
+	}
+
+	limiter := rate.NewLimiter(rate.Limit(bandwidth), bandwidth)
+	ctx, cancel := context.WithCancel(context.Background())
+	return &amp;amp;BandwidthLimiter{
+		limiter:   limiter,
+		ctx:       ctx,
+		cancel:    cancel,
+		bandwidth: bandwidth,
+	}, nil
+}
+
+func (bl *BandwidthLimiter) Wait(num int) error {
+	bandwidth := bl.bandwidth
+	if bandwidth == 0 || num &amp;lt;= 0 {
+		return nil
+	}
+
+	if num &amp;lt;= bandwidth {
+		return bl.limiter.WaitN(bl.ctx, num)
+	} else {
+		for i := 0; i &amp;lt; num/bandwidth; i++ {
+			bl.limiter.WaitN(bl.ctx, bandwidth)
+		}
+		return bl.limiter.WaitN(bl.ctx, num%bandwidth)
+	}
+}
+
+func (bl *BandwidthLimiter) UpdateBandwidth(bandwidth int) error {
+	if bandwidth &amp;lt; 0 {
+		return fmt.Errorf(&amp;quot;invalid argument bandwidth %d&amp;quot;, bandwidth)
+	}
+
+	bl.limiter.SetLimit(rate.Limit(bandwidth))
+	bl.limiter.SetBurst(bandwidth)
+	atomic.StoreInt32((*int32)(unsafe.Pointer(&amp;amp;bl.bandwidth)), int32(bandwidth))
+	return nil
+}
+
+func (bl *BandwidthLimiter) Stop() {
+	bl.cancel()
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
