@@ -80,6 +80,18 @@ func (bl *BandwidthLimiter) Stop() {
 	bl.cancel()
 }
 &lt;/code&gt;&lt;/pre&gt;
+&lt;h1 id=&#34;使用&#34;&gt;使用&lt;/h1&gt;
+&lt;p&gt;使用方法如下，在Write发送数据之前或者Read接收数据之后，调用BandwidthLimiter的Wait方法即可实现限速。虽然此方案在1s内可能会有burst，但是1s内的平均速率不会超过限额，这种精度基本上够用了。&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func witeWithLimiter(con net.Conn, limiter *BandwidthLimiter, data []byte) (int, error) {
+	if limiter != nil {
+		if err := limiter.Wait(len(data)); err != nil {
+			return 0, err
+		}
+	}
+
+	return con.Write(data)
+}
+&lt;/code&gt;&lt;/pre&gt;
 </description>
     </item>
     
